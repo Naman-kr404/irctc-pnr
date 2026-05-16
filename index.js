@@ -1,5 +1,6 @@
 const express = require("express");
 const multer = require("multer");
+require("dotenv").config();
 const fs = require("fs");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
@@ -15,8 +16,11 @@ const upload = multer({
 // -----------------------------------
 // Gemini setup
 // -----------------------------------
+// const genAI = new GoogleGenerativeAI(
+//     "AIzaSyCst6HlH_EW0A5ehSOfwNTq5yPL7Yf8DHg"
+// );
 const genAI = new GoogleGenerativeAI(
-    "AIzaSyCst6HlH_EW0A5ehSOfwNTq5yPL7Yf8DHg"
+    process.env.GEMINI_API_KEY
 );
 
 // -----------------------------------
