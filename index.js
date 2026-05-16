@@ -6,14 +6,14 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const app = express();
 
 // -----------------------------------
-// Multer setup
+// Multer
 // -----------------------------------
 const upload = multer({
     dest: "uploads/"
 });
 
 // -----------------------------------
-// Gemini setup
+// Gemini
 // -----------------------------------
 const genAI = new GoogleGenerativeAI(
     process.env.GEMINI_API_KEY
@@ -23,11 +23,11 @@ const genAI = new GoogleGenerativeAI(
 // Root route
 // -----------------------------------
 app.get("/", (req, res) => {
-    res.send("Gemini Captcha Solver API Running");
+    res.send("Gemini API Running");
 });
 
 // -----------------------------------
-// Solve captcha route
+// Captcha route
 // -----------------------------------
 app.post(
     "/solve-captcha",
@@ -36,27 +36,29 @@ app.post(
 
         try {
 
-            // Check upload
+            console.log("POST request received");
+
+            // Validate upload
             if (!req.file) {
                 return res.status(400).json({
                     error: "No image uploaded"
                 });
             }
 
-            console.log("Image received");
+            console.log("Uploaded file:", req.file.path);
 
-            // Read uploaded image
+            // Read image
             const imageBuffer = fs.readFileSync(req.file.path);
 
-            // Convert to base64
+            // Base64 encode
             const base64Image = imageBuffer.toString("base64");
+
+            console.log("Sending to Gemini");
 
             // Gemini model
             const model = genAI.getGenerativeModel({
                 model: "gemini-1.5-flash"
             });
-
-            console.log("Sending image to Gemini");
 
             // Gemini request
             const result = await model.generateContent([
@@ -68,17 +70,9 @@ app.post(
                 },
                 {
                     text: `
-                    This image contains a simple arithmetic captcha.
-
-                    Read the arithmetic expression carefully.
+                    Solve this arithmetic captcha.
 
                     Return ONLY the final numerical answer.
-
-                    Example:
-                    42 + 80 = 122
-
-                    Output:
-                    122
                     `
                 }
             ]);
@@ -87,16 +81,16 @@ app.post(
 
             console.log("Gemini response:", text);
 
-            // Delete uploaded temp file
+            // Cleanup
             fs.unlinkSync(req.file.path);
 
-            // Return response
             return res.json({
                 result: text.trim()
             });
 
         } catch (err) {
 
+            console.error("FULL ERROR:");
             console.error(err);
 
             return res.status(500).json({
