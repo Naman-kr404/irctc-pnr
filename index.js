@@ -16,7 +16,7 @@ const upload = multer({
 // Gemini setup
 // -----------------------------------
 const genAI = new GoogleGenerativeAI(
-    "AIzaSyBc3SJ_L6V-KQgsex_lG3w32uVJ_EEejro"
+    "AIzaSyCst6HlH_EW0A5ehSOfwNTq5yPL7Yf8DHg"
 );
 
 // -----------------------------------
