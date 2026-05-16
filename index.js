@@ -1,6 +1,7 @@
 const express = require("express");
 const multer = require("multer");
 const fs = require("fs");
+const path = require("path");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const app = express();
@@ -23,11 +24,11 @@ const genAI = new GoogleGenerativeAI(
 // Root route
 // -----------------------------------
 app.get("/", (req, res) => {
-    res.send("Gemini API Running");
+    res.send("Gemini Captcha Solver Running");
 });
 
 // -----------------------------------
-// Captcha route
+// Solve captcha
 // -----------------------------------
 app.post(
     "/solve-captcha",
@@ -36,21 +37,21 @@ app.post(
 
         try {
 
-            console.log("POST request received");
+            console.log("Request received");
 
-            // Validate upload
+            // Validate file
             if (!req.file) {
                 return res.status(400).json({
                     error: "No image uploaded"
                 });
             }
 
-            console.log("Uploaded file:", req.file.path);
+            console.log("File:", req.file.originalname);
 
-            // Read image
+            // Read uploaded file
             const imageBuffer = fs.readFileSync(req.file.path);
 
-            // Base64 encode
+            // Convert to base64
             const base64Image = imageBuffer.toString("base64");
 
             console.log("Sending to Gemini");
@@ -60,11 +61,11 @@ app.post(
                 model: "gemini-1.5-flash"
             });
 
-            // Gemini request
+            // Generate response
             const result = await model.generateContent([
                 {
                     inlineData: {
-                        mimeType: req.file.mimetype,
+                        mimeType: req.file.mimetype || "image/png",
                         data: base64Image
                     }
                 },
@@ -72,18 +73,26 @@ app.post(
                     text: `
                     Solve this arithmetic captcha.
 
-                    Return ONLY the final numerical answer.
+                    Return ONLY the final number.
+
+                    Example:
+                    22 + 10 = 32
+
+                    Output:
+                    32
                     `
                 }
             ]);
 
+            // Extract text
             const text = result.response.text();
 
-            console.log("Gemini response:", text);
+            console.log("Gemini Output:", text);
 
-            // Cleanup
+            // Delete temp file
             fs.unlinkSync(req.file.path);
 
+            // Send JSON response
             return res.json({
                 result: text.trim()
             });
